@@ -1,38 +1,40 @@
-name: Flutter CI/CD
+name: Flutter CI/CD (Windows)
 
-on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
+on: [push, pull_request]
 
 jobs:
   build:
-    name: Build and Test
-    runs-on: ubuntu-latest
+    runs-on: windows-latest  # Changed from ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v3
+        with:
+          java-version: '11'
+          distribution: 'zulu'
 
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.13.0'
+          flutter-version: '3.19.5'
+          channel: 'stable'
 
       - name: Install dependencies
         run: flutter pub get
 
-      - name: Analyze code
-        run: flutter analyze
-
       - name: Run tests
         run: flutter test
 
-      - name: Build APK
-        run: flutter build apk --release
+      - name: Build Windows executable
+        run: flutter build windows  # For Windows apps
+        # OR for Android on Windows:
+        # run: flutter build apk --release
 
-      - name: Upload APK
-        uses: actions/upload-artifact@v3
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
         with:
-          name: portfolio-app-release
-          path: build/app/outputs/flutter-apk/app-release.apk
+          name: windows-build
+          path: build/windows/runner/Release/
+          # For Android: path: build/app/outputs/flutter-apk/
