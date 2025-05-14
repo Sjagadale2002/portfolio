@@ -1,24 +1,59 @@
-name: Flutter CI/CD
+name: Flutter CI/CD (Windows)
 
 on: [push, pull_request]
 
+env:
+  FLUTTER_VERSION: '3.27.3'  # Matches your local version
+  JAVA_VERSION: '21'         # Matches your JDK 21
+
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest  # Windows runner
+
     steps:
       - uses: actions/checkout@v4
 
+      # Windows-Specific Configuration
+      - name: Enable long paths
+        run: git config --system core.longpaths true
+
+      # Java Setup (matches your Android Studio JDK)
+      - name: Set up Java
+        uses: actions/setup-java@v3
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'zulu'
+
+      # Flutter Setup (exact version match)
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.19.5'  # Fixed version
+          flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: 'stable'
 
+      # Build Process
       - name: Install dependencies
         run: flutter pub get
 
       - name: Run tests
         run: flutter test
 
-      - name: Build APK
+      # Multi-platform builds
+      - name: Build Windows App
+        run: flutter build windows
+
+      - name: Build Android APK
         run: flutter build apk --release
+
+      # Artifacts
+      - name: Upload Windows Build
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-build
+          path: build\windows\runner\Release\
+
+      - name: Upload Android APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-apk
+          path: build\app\outputs\flutter-apk\app-release.apk
